@@ -75,3 +75,7 @@ def play_game():
         print("👍 Good job! Keep practicing!")
     else:
         print("🛠️ Keep learning and improving!")
+
+        # Run the game
+if __name__ == "__main__":
+    play_game()
