@@ -1,4 +1,3 @@
-CyberDefender: Cybersecurity Incident Simulator**
 
 **CyberDefender** is an interactive cybersecurity incident simulator designed to help users improve their incident response skills by tackling real-world scenarios. The game presents a series of cybersecurity challenges where users must analyze logs, identify suspicious activity, and make decisions on how to respond. It's built with Python and uses Tkinter for the user interface, along with animations for an engaging experience.
 
