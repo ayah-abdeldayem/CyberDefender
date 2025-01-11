@@ -1,7 +1,9 @@
 import sys
 import random
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QGraphicsView, QGraphicsScene
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 # Define different technical scenarios
 scenarios = [
@@ -20,70 +22,7 @@ scenarios = [
         "correct": "Block the user's account",
         "explanation": "Blocking immediately prevents the attacker from accessing the system."
     },
-    {
-        "description": "Malware detected on an employee's computer.",
-        "logs": [
-            "2025-01-11 17:06:00 Malware alert triggered on device 'employee01'.",
-            "2025-01-06 17:06:30 Antivirus scan in progress...",
-            "2025-01-11 17:07:00 High-risk malware detected. Action required."
-        ],
-        "options": {
-            "Disconnect the computer from the network": "Correct! Isolating the device prevents further spread of malware.",
-            "Run a full antivirus scan": "Incorrect. Scanning is important but takes time. Immediate isolation is more effective.",
-            "Notify all employees to check their devices": "Partially correct. It's important, but isolating the infected device prevents further damage."
-        },
-        "correct": "Disconnect the computer from the network",
-        "explanation": "Disconnecting prevents the malware from communicating with external servers and spreading to other devices."
-    },
-    {
-        "description": "Suspicious login attempt detected in Splunk logs.",
-        "logs": [
-            "2025-01-11 17:08:12.007 User 'guest' login attempt from IP 192.168.1.50. Status: Success",
-            "2025-01-11 17:09:00.011 User 'guest' login attempt from IP 192.168.1.50. Status: Failed",
-            "2025-01-11 17:10:12.500 User 'guest' login attempt from IP 192.168.1.50. Status: Failed",
-            "2025-01-11 17:10:30.000 User 'admin' login attempt from IP 192.168.1.100. Status: Success",
-            "2025-01-11 17:11:15.320 User 'guest' login attempt from IP 192.168.1.50. Status: Failed"
-        ],
-        "options": {
-            "Block IP 192.168.1.50": "Correct! Multiple failed attempts from the same IP address suggest brute force attack.",
-            "Notify user 'guest' about failed attempts": "Incorrect. While informing the user is important, blocking the IP prevents further attacks.",
-            "Ignore and monitor for further suspicious activities": "Partially correct. Monitoring is important, but action should be taken after multiple failed attempts."
-        },
-        "correct": "Block IP 192.168.1.50",
-        "explanation": "Blocking the IP prevents the attacker from trying additional login attempts and possibly compromising the system."
-    },
-    {
-        "description": "Network intrusion detected from suspicious traffic pattern.",
-        "logs": [
-            "2025-01-11 17:13:02.014 Source IP 10.0.0.5, Destination IP 192.168.10.20, Traffic Type: Unknown Protocol",
-            "2025-01-11 17:13:30.032 Source IP 10.0.0.5, Destination IP 192.168.10.20, Traffic Type: High volume",
-            "2025-01-11 17:14:00.255 Source IP 10.0.0.5, Destination IP 192.168.10.20, Traffic Type: High volume",
-            "2025-01-11 17:15:00.290 Source IP 10.0.0.5, Destination IP 192.168.10.20, Traffic Type: Suspicious protocol"
-        ],
-        "options": {
-            "Disconnect the source IP from the network": "Correct! Disconnecting the source prevents further intrusion and potential damage.",
-            "Investigate the traffic to determine if it's legitimate": "Incorrect. While investigation is needed, disconnecting the suspicious source is crucial to prevent further threats.",
-            "Ignore and monitor for further suspicious traffic": "Partially correct. Monitoring is important, but immediate isolation prevents further damage."
-        },
-        "correct": "Disconnect the source IP from the network",
-        "explanation": "Disconnecting prevents the attacker from exploiting vulnerabilities and stops the flow of suspicious traffic."
-    },
-    {
-        "description": "Suspicious file transfer detected in Splunk logs.",
-        "logs": [
-            "2025-01-11 17:20:12.140 File transfer initiated by 'admin' to external IP 198.51.100.5",
-            "2025-01-11 17:20:40.180 File transfer completed from 'admin' to external IP 198.51.100.5",
-            "2025-01-11 17:22:12.350 File transfer initiated by 'employee01' to external IP 198.51.100.5",
-            "2025-01-11 17:22:30.310 File transfer completed from 'employee01' to external IP 198.51.100.5"
-        ],
-        "options": {
-            "Investigate the file transfer activity": "Correct! Investigating the transfer will help identify if it's legitimate or part of a data breach.",
-            "Notify the users involved and wait for a response": "Incorrect. Immediate action is needed to prevent data loss or a breach, not just notification.",
-            "Ignore the activity as it seems normal": "Partially correct. While it's important to monitor, ignoring potential breaches is risky."
-        },
-        "correct": "Investigate the file transfer activity",
-        "explanation": "Investigating the transfer can reveal whether it was a legitimate operation or part of a malicious data exfiltration attempt."
-    },
+    # Add additional scenarios as needed
 ]
 
 class CyberDefenderApp(QWidget):
@@ -136,6 +75,18 @@ class CyberDefenderApp(QWidget):
         self.next_button.clicked.connect(self.next_scenario)
         self.layout.addWidget(self.next_button)
 
+        # Add graphics view for confetti
+        self.graphics_view = QGraphicsView(self)
+        self.graphics_view.setStyleSheet("background-color: transparent;")
+        self.graphics_view.setGeometry(0, 0, 800, 600)
+        self.graphics_view.setVisible(False)
+        self.layout.addWidget(self.graphics_view)
+
+        # Set up the scene and confetti
+        self.scene = QGraphicsScene()
+        self.graphics_view.setScene(self.scene)
+        self.confetti_particles = []
+
         self.setLayout(self.layout)
         self.current_scenario_index = 0
         self.correct_answers = 0
@@ -184,10 +135,50 @@ class CyberDefenderApp(QWidget):
         if self.current_scenario_index < len(scenarios):
             self.show_scenario()
         else:
-            self.scenario_label.setText("Game Over!")
-            self.logs_label.setText(f"Total Correct Answers: {self.correct_answers}")
-            self.feedback_label.setText(f"Total Wrong Answers: {self.wrong_answers}")
-            self.next_button.setEnabled(False)
+            self.end_game()
+
+    def end_game(self):
+        self.scenario_label.setText("Game Over!")
+        self.logs_label.setText(f"Total Correct Answers: {self.correct_answers}")
+        self.feedback_label.setText(f"Total Wrong Answers: {self.wrong_answers}")
+        self.next_button.setEnabled(False)
+
+        # Hide buttons and show hacker image and confetti
+        for button in self.buttons:
+            button.setVisible(False)
+
+        # Display the hacker image
+        hacker_image = QLabel(self)
+        hacker_pixmap = QPixmap("hacker_image.png")  # Make sure to add a hacker image in the directory
+        hacker_image.setPixmap(hacker_pixmap.scaled(400, 400, Qt.KeepAspectRatio))
+        hacker_image.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(hacker_image)
+
+        # Show confetti animation
+        self.show_confetti()
+
+    def show_confetti(self):
+        # Simple confetti effect using circles
+        for _ in range(100):
+            particle = self.scene.addEllipse(
+                random.randint(0, 800), random.randint(0, 600),
+                random.randint(5, 15), random.randint(5, 15),
+                brush=Qt.green
+            )
+            self.confetti_particles.append(particle)
+        
+        # Start confetti animation
+        self.animate_confetti()
+
+    def animate_confetti(self):
+        # Simulate a simple movement for the confetti particles
+        for particle in self.confetti_particles:
+            x_move = random.randint(-5, 5)
+            y_move = random.randint(-5, 5)
+            particle.setPos(particle.x() + x_move, particle.y() + y_move)
+
+        # Continue animation every 50 milliseconds
+        QTimer.singleShot(50, self.animate_confetti)
 
 # Main function to run the app
 def main():
