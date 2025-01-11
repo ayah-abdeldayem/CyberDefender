@@ -1,8 +1,7 @@
-import tkinter as tk
-from tkinter import messagebox
-import random
-import os
-os.environ['TK_SILENCE_DEPRECATION'] = '1'
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
+from PyQt5.QtCore import Qt
+
 
 # Define scenarios
 scenarios = [
@@ -44,85 +43,100 @@ scenarios = [
     }
 ]
 
-# Main application class
-class CyberDefenderApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("CyberDefender")
-        self.root.configure(bg="#1E1E2F")  # Dark theme
 
-        self.current_scenario = 0
+class CyberDefenderApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("CyberDefender")
+        self.setGeometry(100, 100, 800, 600)
+        self.setStyleSheet("background-color: #1E1E2F; color: #00FF00; font-family: Courier New;")
 
-        # Scenario label (grid used instead of pack)
-        self.scenario_label = tk.Label(
-            root, text="Loading Scenario...", wraplength=500, fg="#00FF00", bg="#1E1E2F", font=("Courier New", 16, 'bold'), pady=10
-        )
-        self.scenario_label.grid(row=0, column=0, padx=20, pady=20)  # Adjusted for grid
+        # Layout
+        self.layout = QVBoxLayout()
+
+        # Scenario label
+        self.scenario_label = QLabel("Loading Scenario...", self)
+        self.scenario_label.setAlignment(Qt.AlignCenter)
+        self.scenario_label.setStyleSheet("font-size: 16px; color: #00FF00;")
+        self.layout.addWidget(self.scenario_label)
 
         # Buttons for options
         self.buttons = []
         for i in range(3):  # 3 options per scenario
-            btn = tk.Button(
-                root, text="", width=40, bg="#333366", fg="#00FF00",
-                font=("Courier New", 12), command=lambda b=i: self.check_response(b)
-            )
-            btn.grid(row=i + 1, column=0, padx=20, pady=5)  # Added grid layout for buttons
+            btn = QPushButton("", self)
+            btn.setStyleSheet("background-color: #333366; color: #00FF00; font-size: 14px;")
+            btn.clicked.connect(lambda checked, b=i: self.check_response(b))
+            self.layout.addWidget(btn)
             self.buttons.append(btn)
 
-        # Next incident button (grid layout)
-        self.next_button = tk.Button(
-            root, text="Next Incident", state=tk.DISABLED, width=20,
-            bg="#007ACC", fg="#FFFFFF", font=("Courier New", 12), command=self.next_scenario
-        )
-        self.next_button.grid(row=4, column=0, pady=10)
+        # Next incident button
+        self.next_button = QPushButton("Next Incident", self)
+        self.next_button.setStyleSheet("background-color: #007ACC; color: #FFFFFF; font-size: 14px;")
+        self.next_button.setEnabled(False)
+        self.next_button.clicked.connect(self.next_scenario)
+        self.layout.addWidget(self.next_button)
+
+        self.setLayout(self.layout)
 
         # Initialize the first scenario
+        self.current_scenario = 0
         self.load_scenario()
 
     def load_scenario(self):
         scenario = scenarios[self.current_scenario]
-        print(f"Loading Scenario: {scenario['description']}")  # Debugging message to ensure scenario is loaded
-
-        # Update the label and force redraw
-        self.scenario_label.config(text=f"Scenario: {scenario['description']}")  
-        self.scenario_label.update_idletasks()  # Force the label to update immediately
+        
+        # Update the scenario label
+        self.scenario_label.setText(scenario["description"])
 
         # Update buttons with options
         for idx, (option, feedback) in enumerate(scenario["options"].items()):
-            self.buttons[idx].config(text=option, command=lambda o=option: self.check_response(o))
-            self.buttons[idx].config(state=tk.NORMAL)
+            self.buttons[idx].setText(option)
+            self.buttons[idx].setEnabled(True)
 
         # Disable the "Next Incident" button until a response is selected
-        self.next_button.config(state=tk.DISABLED)
+        self.next_button.setEnabled(False)
 
-    def check_response(self, selected_option):
+    def check_response(self, selected_option_index):
         scenario = scenarios[self.current_scenario]
+        selected_option = self.buttons[selected_option_index].text()
         feedback = scenario["options"][selected_option]
 
         # Show feedback in messagebox with cyber color theme
         if selected_option == scenario["correct"]:
-            messagebox.showinfo("Response", feedback)
+            self.show_feedback("Correct!", feedback)
         else:
-            messagebox.showwarning("Response", feedback)
+            self.show_feedback("Incorrect", feedback)
 
         # Disable buttons after a response
         for btn in self.buttons:
-            btn.config(state=tk.DISABLED)
+            btn.setEnabled(False)
 
         # Enable the "Next Incident" button after selecting an option
-        self.next_button.config(state=tk.NORMAL)
+        self.next_button.setEnabled(True)
+
+    def show_feedback(self, title, message):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information if title == "Correct!" else QMessageBox.Warning)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+        msg.exec_()
 
     def next_scenario(self):
         self.current_scenario += 1
         if self.current_scenario < len(scenarios):
             self.load_scenario()
         else:
-            messagebox.showinfo("Game Over", "You have completed all incidents!")
-            self.root.quit()
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("Game Over")
+            msg.setText("You have completed all incidents!")
+            msg.exec_()
+            self.close()
 
 
 # Run the app
 if __name__ == "__main__":
-    root = tk.Tk()  # Initialize root window first
-    app = CyberDefenderApp(root)  # Now, create the app instance
-    root.mainloop()  # Start Tkinter event loop
+    app = QApplication(sys.argv)
+    window = CyberDefenderApp()
+    window.show()
+    sys.exit(app.exec_())
