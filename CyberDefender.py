@@ -29,3 +29,8 @@ INCIDENTS = [
         "explanation": "Quarantining the file prevents malware from spreading."
     },
 ]
+# Helper function to display a scenario
+def generate_incident():
+    incident = random.choice(INCIDENTS)
+    log = incident["log"]()
+    return incident, log
