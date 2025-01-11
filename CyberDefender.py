@@ -54,11 +54,12 @@ class CyberDefenderApp:
 
         self.current_scenario = 0
 
-        # Scenario label
+        # Scenario label with forced update
         self.scenario_label = tk.Label(
-            root, text="", wraplength=500, fg="#00FF00", bg="#1E1E2F", font=("Courier New", 16, 'bold'), pady=10
+            root, text="Scenario will be displayed here.", wraplength=500, fg="#00FF00", bg="#1E1E2F", font=("Courier New", 16, 'bold'), pady=10
         )
-        self.scenario_label.pack()
+        self.scenario_label.pack(pady=20)  # Added more padding for space
+        self.root.update()  # Force widget update
 
         # Buttons for options
         self.buttons = []
@@ -81,13 +82,24 @@ class CyberDefenderApp:
         self.load_scenario()
 
     def load_scenario(self):
+        # Debugging step to see the current scenario's description
+        print(f"Loading scenario: {scenarios[self.current_scenario]['description']}")
+        
         scenario = scenarios[self.current_scenario]
-        self.scenario_label.config(text=f"Scenario: {scenario['description']}")
+        self.scenario_label.config(text=f"Scenario: {scenario['description']}")  # Make sure text is updated here
+        
+        # Debugging message to ensure the scenario is being loaded
+        print(f"Scenario label updated with description: {scenario['description']}")
 
+        # Force update of the root window to refresh the layout
+        self.root.update()
+
+        # Update buttons with options
         for idx, (option, feedback) in enumerate(scenario["options"].items()):
             self.buttons[idx].config(text=option, command=lambda o=option: self.check_response(o))
             self.buttons[idx].config(state=tk.NORMAL)
 
+        # Disable the "Next Incident" button until a response is selected
         self.next_button.config(state=tk.DISABLED)
 
     def check_response(self, selected_option):
@@ -104,6 +116,7 @@ class CyberDefenderApp:
         for btn in self.buttons:
             btn.config(state=tk.DISABLED)
 
+        # Enable the "Next Incident" button after selecting an option
         self.next_button.config(state=tk.NORMAL)
 
     def next_scenario(self):
