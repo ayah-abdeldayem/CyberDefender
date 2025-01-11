@@ -4,7 +4,6 @@ import random
 import os
 os.environ['TK_SILENCE_DEPRECATION'] = '1'
 
-
 # Define scenarios
 scenarios = [
     {
@@ -54,45 +53,39 @@ class CyberDefenderApp:
 
         self.current_scenario = 0
 
-        # Scenario label with forced update
+        # Scenario label (grid used instead of pack)
         self.scenario_label = tk.Label(
-            root, text="Scenario will be displayed here.", wraplength=500, fg="#00FF00", bg="#1E1E2F", font=("Courier New", 16, 'bold'), pady=10
+            root, text="Loading Scenario...", wraplength=500, fg="#00FF00", bg="#1E1E2F", font=("Courier New", 16, 'bold'), pady=10
         )
-        self.scenario_label.pack(pady=20)  # Added more padding for space
-        self.root.update()  # Force widget update
+        self.scenario_label.grid(row=0, column=0, padx=20, pady=20)  # Adjusted for grid
 
         # Buttons for options
         self.buttons = []
-        for _ in range(3):  # 3 options per scenario
+        for i in range(3):  # 3 options per scenario
             btn = tk.Button(
                 root, text="", width=40, bg="#333366", fg="#00FF00",
-                font=("Courier New", 12), command=lambda b=_: self.check_response(b)
+                font=("Courier New", 12), command=lambda b=i: self.check_response(b)
             )
-            btn.pack(pady=5)
+            btn.grid(row=i + 1, column=0, padx=20, pady=5)  # Added grid layout for buttons
             self.buttons.append(btn)
 
-        # Next incident button
+        # Next incident button (grid layout)
         self.next_button = tk.Button(
             root, text="Next Incident", state=tk.DISABLED, width=20,
             bg="#007ACC", fg="#FFFFFF", font=("Courier New", 12), command=self.next_scenario
         )
-        self.next_button.pack(pady=10)
+        self.next_button.grid(row=4, column=0, pady=10)
 
         # Initialize the first scenario
         self.load_scenario()
 
     def load_scenario(self):
-        # Debugging step to see the current scenario's description
-        print(f"Loading scenario: {scenarios[self.current_scenario]['description']}")
-        
         scenario = scenarios[self.current_scenario]
-        self.scenario_label.config(text=f"Scenario: {scenario['description']}")  # Make sure text is updated here
-        
-        # Debugging message to ensure the scenario is being loaded
-        print(f"Scenario label updated with description: {scenario['description']}")
+        print(f"Loading Scenario: {scenario['description']}")  # Debugging message to ensure scenario is loaded
 
-        # Force update of the root window to refresh the layout
-        self.root.update()
+        # Update the label and force redraw
+        self.scenario_label.config(text=f"Scenario: {scenario['description']}")  
+        self.scenario_label.update_idletasks()  # Force the label to update immediately
 
         # Update buttons with options
         for idx, (option, feedback) in enumerate(scenario["options"].items()):
@@ -130,6 +123,6 @@ class CyberDefenderApp:
 
 # Run the app
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = CyberDefenderApp(root)
-    root.mainloop()
+    root = tk.Tk()  # Initialize root window first
+    app = CyberDefenderApp(root)  # Now, create the app instance
+    root.mainloop()  # Start Tkinter event loop
