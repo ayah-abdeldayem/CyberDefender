@@ -1,7 +1,7 @@
 import random
 import time
 from faker import Faker
-
+faker = Faker()
 #initialize scenarios and reponses
 INCIDENTS = [
     {
