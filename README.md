@@ -53,4 +53,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## **🙌 Credits**
 - **Ayah Abdeldayem** (Lead Developer 🚀)
-- **Naji Abdeldayem** (Team Member 👨‍💻)
+- **Naji Abdeldayem** (Co Developer 👨‍💻)
